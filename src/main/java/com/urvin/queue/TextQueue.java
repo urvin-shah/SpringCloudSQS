@@ -11,7 +11,9 @@ import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cloud.aws.messaging.core.QueueMessageChannel;
 import org.springframework.cloud.aws.messaging.core.QueueMessagingTemplate;
+import org.springframework.cloud.aws.messaging.core.SqsMessageHeaders;
 import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.messaging.Message;
@@ -28,6 +30,7 @@ public class TextQueue {
     private String queueName;
 
     private AmazonSQSAsync amazonSQSAsync;
+    private QueueMessagingTemplate queueMessagingTemplate;
 
     public String getQueueName() {
         return queueName;
@@ -42,6 +45,7 @@ public class TextQueue {
         this.queueName = "TextMessageQueue.fifo";
         this.amazonSQSAsync = new AmazonSQSAsyncClient(new ProfileCredentialsProvider());
         this.amazonSQSAsync.setRegion(Region.getRegion(Regions.US_EAST_1));
+        this.queueMessagingTemplate = new QueueMessagingTemplate(this.amazonSQSAsync);
         this.createQueue();
     }
 
@@ -61,6 +65,13 @@ public class TextQueue {
             sendMessageRequest.setMessageGroupId("GroupId1");
             sendMessageRequest.setMessageDeduplicationId("Deduplication123");
             amazonSQSAsync.sendMessage(sendMessageRequest);
+        }
+    }
+
+    public void sendTextMessage(String message) {
+        if(!StringUtils.isEmpty(message)) {
+            System.out.println("Send Message:"+message);
+            this.queueMessagingTemplate.send(this.queueName,MessageBuilder.withPayload(message).setHeader(SqsMessageHeaders.SQS_GROUP_ID_HEADER,"message123").build());
         }
     }
 

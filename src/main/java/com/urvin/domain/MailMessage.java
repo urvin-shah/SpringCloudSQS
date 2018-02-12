@@ -1,5 +1,8 @@
 package com.urvin.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class MailMessage {
     private String userList;
     private String toField;
@@ -8,7 +11,8 @@ public class MailMessage {
     private String messageField;
     private String optionalSenderName;
 
-    public MailMessage(String userList, String toField, String fromField, String subjectField, String messageField, String optionalSenderName) {
+    @JsonCreator
+    public MailMessage(@JsonProperty("userList") String userList, @JsonProperty("toField") String toField,@JsonProperty("fromField") String fromField, @JsonProperty("subjectField") String subjectField,@JsonProperty("messageField") String messageField,@JsonProperty("optionalSenderName") String optionalSenderName) {
         this.userList = userList;
         this.toField = toField;
         this.fromField = fromField;
@@ -16,6 +20,14 @@ public class MailMessage {
         this.messageField = messageField;
         this.optionalSenderName = optionalSenderName;
     }
+   /* public MailMessage( String userList, String toField,String fromField,String subjectField,String messageField,String optionalSenderName) {
+        this.userList = userList;
+        this.toField = toField;
+        this.fromField = fromField;
+        this.subjectField = subjectField;
+        this.messageField = messageField;
+        this.optionalSenderName = optionalSenderName;
+    }*/
 
     public String getUserList() {
         return userList;
