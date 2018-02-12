@@ -9,6 +9,7 @@ import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.urvin.domain.MailMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.messaging.core.QueueMessagingTemplate;
 import org.springframework.cloud.aws.messaging.core.SqsMessageHeaders;
 import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener;
@@ -17,12 +18,14 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
 public class ObjectQueue {
 
+    @Value("${sqs.objectQueue}")
     private String queueName;
 
     private AmazonSQSAsync amazonSQSAsync;
@@ -39,13 +42,14 @@ public class ObjectQueue {
 
     @Autowired
     public ObjectQueue(){
-        this.queueName = "ObjectMessageQueue.fifo";
+//        this.queueName = "ObjectMessageQueue.fifo";
         this.amazonSQSAsync = new AmazonSQSAsyncClient(new ProfileCredentialsProvider());
         this.amazonSQSAsync.setRegion(Region.getRegion(Regions.US_EAST_1));
         this.queueMessagingTemplate = new QueueMessagingTemplate(this.amazonSQSAsync);
-        this.createQueue();
+//        this.createQueue();
     }
 
+    @PostConstruct
     public void createQueue() {
         Map<String, String> attributes = new HashMap<>();
         attributes.put("FifoQueue", "true");
@@ -70,6 +74,7 @@ public class ObjectQueue {
     // Send message using the QueueMessagingTemplate.
     public void sendMessage(MailMessage message) {
         if(message != null) {
+            System.out.println("Queue name :"+this.getQueueName());
             System.out.println("Message is:"+message);
             Map<String,Object> messageHeaders = new HashMap<String,Object>();
             messageHeaders.put(SqsMessageHeaders.SQS_GROUP_ID_HEADER,"GrpId13");
@@ -77,7 +82,7 @@ public class ObjectQueue {
         }
     }
 
-    @SqsListener("ObjectMessageQueue.fifo")
+    @SqsListener("${sqs.objectQueue}")
     public void receive(MailMessage message) {
         if(message != null) {
             System.out.println("Received Message :");

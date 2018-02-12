@@ -11,6 +11,7 @@ import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.messaging.core.QueueMessageChannel;
 import org.springframework.cloud.aws.messaging.core.QueueMessagingTemplate;
 import org.springframework.cloud.aws.messaging.core.SqsMessageHeaders;
@@ -21,12 +22,15 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
 //@DependsOn(value="sqsClient")
 public class TextQueue {
+
+    @Value("${sqs.textQueue}")
     private String queueName;
 
     private AmazonSQSAsync amazonSQSAsync;
@@ -42,13 +46,14 @@ public class TextQueue {
 
     @Autowired
     public TextQueue(){
-        this.queueName = "TextMessageQueue.fifo";
+//        this.queueName = "TextMessageQueue.fifo";
         this.amazonSQSAsync = new AmazonSQSAsyncClient(new ProfileCredentialsProvider());
         this.amazonSQSAsync.setRegion(Region.getRegion(Regions.US_EAST_1));
         this.queueMessagingTemplate = new QueueMessagingTemplate(this.amazonSQSAsync);
-        this.createQueue();
+//        this.createQueue();
     }
 
+    @PostConstruct
     public void createQueue() {
         Map<String, String> attributes = new HashMap<>();
         attributes.put("FifoQueue", "true");
@@ -75,7 +80,7 @@ public class TextQueue {
         }
     }
 
-    @SqsListener("TextMessageQueue.fifo")
+    @SqsListener("${sqs.textQueue}")
     public void receive(String message) {
         if(!StringUtils.isEmpty(message)) {
             System.out.println("Received Message :"+message);
